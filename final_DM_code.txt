@@ -1,0 +1,251 @@
+data=read.csv("C:/Users/vamshi/Desktop/New folder (2)/prjctwilt.csv",header =TRUE)
+fix(data)
+RNGkind(sample.kind = "Rounding")
+set.seed(123)
+library(e1071)
+library(ISLR)
+library(class)
+library(plotrix)
+attach(data)
+dim(data)
+wiltdata=sample(1:nrow(data),3387)
+w_trainset=data[wiltdata,]
+w_testset=data[-wiltdata,]
+********************************************************************************************************************
+###Decision Tree Holdout method  Implementation###
+
+library(tree)
+wilt.test=class[-wiltdata]
+wilt.train=class[wiltdata]
+tree.dt=tree(class~.,data,subset =wiltdata)
+summary(tree.dt)
+plot(tree.dt)
+text(tree.dt,pretty = 0)
+tree.pred.train=predict(tree.dt,w_trainset,type = "class")
+table(tree.pred.train,wilt.train)
+tree.pred.train.acc=mean(tree.pred.train==wilt.train)
+tree.pred.train.err=1-tree.pred.train.acc
+tree.pred.train.acc*100
+tree.pred.train.err*100
+tree.pred=predict(tree.dt,w_testset,type = "class")
+table(tree.pred,wilt.test)
+tree.pred.test.acc=mean(tree.pred==wilt.test)
+tree.pred.test.err=1-tree.pred.test.acc
+tree.pred.test.acc*100
+tree.pred.test.err*100
+*********************************************************************************************************************
+###Bagging  Algorithm implementation###
+
+library(randomForest) 
+rf_bag=randomForest(class~.,data,subset =wiltdata,ntree=500,mtry=3)
+rf_train_pred=predict(rf_bag,w_trainset,type = "class")
+table(rf_train_pred,wilt.train)
+rf_bag_acc=mean(rf_train_pred==wilt.train)
+rf_bag_err=1-rf_bag_acc
+rf_bag_acc*100
+rf_bag_err*100
+rf_test_pred=predict(rf_bag,w_testset,type = "class")
+table(rf_test_pred,wilt.test)
+rf_bag_test_acc=mean(rf_test_pred==wilt.test)
+rf_bag_test_err=1-rf_bag_test_acc
+rf_bag_test_acc*100
+rf_bag_test_err*100
+
+***************************************************************************************************************************
+##Random Forest Implementation with change in M and N values
+
+library(randomForest)
+library(ISLR)
+library(tree)
+tree.random_1=randomForest(class~.,w_testset, ntree=500,mtry=sqrt(16))  
+tree.pred=predict(tree.random_1,w_testset,type="class")	
+table(tree.pred,w_testset$class)
+ran_test_err=mean(tree.pred!=w_testset$class)
+ran_test_acc=1-ran_test_err
+ran_test_err
+ran_test_acc
+tree.random_1t=randomForest(class~.,w_trainset, ntree=500,mtry=sqrt(16))  
+tree.pred=predict(tree.random_1t,w_trainset,type="class")	
+table(tree.pred,w_trainset$class)
+ran_train_err=mean(tree.pred!=w_trainset$class)
+ran_train_acc=1-ran_train_err
+ran_train_err
+ran_train_acc
+tree.random_2=randomForest(class~.,w_testset, ntree=100,mtry=sqrt(4))  
+tree.pred=predict(tree.random_2,w_testset,type="class")	
+table(tree.pred,w_testset$class)  
+ran_test_err_1=mean(tree.pred!=w_testset$class)
+ran_test_acc_1=1-ran_test_err
+ran_test_err_1
+ran_test_acc_1
+tree.random_2t=randomForest(class~.,w_trainset, ntree=100,mtry=sqrt(4))  
+tree.pred=predict(tree.random_2t,w_trainset,type="class")	
+table(tree.pred,w_trainset$class)
+ran_train_err_1=mean(tree.pred!=w_trainset$class)
+ran_train_acc_1=1-ran_train_err
+ran_train_acc_1
+ran_train_err_1
+tree.random_3=randomForest(class~.,w_testset, ntree=1000,mtry=sqrt(9))  
+tree.pred=predict(tree.random_3,w_testset,type="class")
+table(tree.pred,w_testset$class)  
+ran_test_err_2=mean(tree.pred!=w_testset$class)
+ran_test_acc_2=1-ran_test_err
+ran_test_acc_2
+ran_test_err_2
+tree.random_3t=randomForest(class~.,w_trainset, ntree=1000,mtry=sqrt(9))  
+tree.pred=predict(tree.random_3t,w_trainset,type="class")	
+table(tree.pred,w_trainset$class)
+ran_train_err_2=mean(tree.pred!=w_trainset$class)
+ran_train_acc_2=1-ran_train_err
+ran_train_acc_2
+ran_train_err_2
+*****************************************************************************************************************************
+#Decision Tree Using Boosting
+library(gbm)
+data=read.csv("C:/Users/vamshi/Desktop/New folder (2)/prjctwilt.csv",header =TRUE)
+data$class=ifelse(data$class=="w",1,0)
+fix(data)
+RNGkind(sample.kind = "Rounding")
+set.seed(123)
+wiltdata=sample(1:nrow(data),3387)
+w_trainset=data[wiltdata,]
+w_testset=data[-wiltdata,]
+tree.wilt=gbm(class~., w_trainset, distribution="gaussian",n.trees=500,interaction.depth=4)
+tree.pred.prob=predict(tree.wilt,w_testset, n.trees=500, type="response")
+tree.pred=ifelse(tree.pred.prob<0.04, "Yes", "No")
+table(w_testset$class,tree.pred)
+err_test=mean(tree.pred!=w_testset$class)
+acc_test=1-err_test
+err_test*100
+acc_test*100
+
+******************************************************************************************************************************
+#Implementation by using Navies Bayes Algorithm
+
+Naive_Bayes_Model=naiveBayes(class~.,w_trainset)
+NB_train= predict(Naive_Bayes_Model, w_trainset)
+table(NB_train,w_trainset$class)
+NB_error=mean(NB_train!=w_trainset$class) 
+NB_acc=1-NB_error
+NB_acc*100
+NB_error*100
+NB_test = predict(Naive_Bayes_Model,w_testset)
+table(NB_test,w_testset$class)
+NB_testerr=mean(NB_test!=w_testset$class)
+NB_testacc=1- NB_testerr
+NB_testacc*100
+NB_testerr*100
+
+#SVM 
+***************************************************************
+library(e1071)
+set.seed(123) 
+svmfit=svm(class~., data=w_trainset, kernel="linear", cost=0.01)
+summary(svmfit)
+svm.pred = predict(svmfit,w_trainset)
+table(svm.pred,w_trainset$class)
+svm_err=mean(svm.pred!=w_trainset$class)
+svm_acc=1-svm_err
+svm_acc*100
+svm_err*100
+svm.testpred = predict(svmfit,w_testset)
+table(svm.testpred ,w_testset$class)
+svm_testerr=mean(svm.testpred!=w_testset$class) 
+svm_testacc=1-svm_testerr
+svm_testacc*100
+svm_testerr*100
+*****************************************************************
+BEST MODEL
+
+tune.out=tune(svm,class~., data=w_trainset,kernel="linear", ranges=list(cost=c(0.001,0.01,0.1,1,10,100)))
+summary(tune.out)
+bestmod=tune.out$best.model
+summary(bestmod)
+train.pred = predict(bestmod,w_trainset)
+table(train.pred ,w_trainset$class)
+best_error=mean(train.pred!=w_trainset$class)  
+best_acc=1-best_error
+best_acc*100 
+best_error*100
+test.pred = predict(bestmod,w_testset)
+table(test.pred ,w_testset$class)
+best_testerr=mean(test.pred!=w_testset$class) 
+best_testacc=1-best_testerr
+best_testacc*100
+best_testerr*100
+
+******************************************************************************************************************
+RADIAL KERNEL
+
+svmfit_radial=svm(class~., data=w_trainset, kernel="radial",gamma=1,cost=0.01)
+summary(svmfit_radial)
+svm.pred = predict(svmfit_radial,w_trainset)
+table(svm.pred,w_trainset$class)
+svm_err=mean(svm.pred!=w_trainset$class)   
+svm_acc=1-svm_err
+svm_acc*100
+svm_err*100
+svm.testpred = predict(svmfit_radial,w_testset)
+table(svm.testpred ,w_testset$class)
+svm_testerr=mean(svm.testpred!=w_testset$class)
+svm_testacc=1-svm_testerr
+svm_testacc*100
+svm_testerr*100
+
+******************************************************************************************************************
+RADIAL KERNEL BEST MODEL
+
+svmtune_radial=tune(svm,class~.,data=w_trainset,, kernel="radial",gamma=c(0.5,1,2,3,4),ranges=list(cost=c(0.1 ,1 ,10 ,100 ,1000)))
+summary(svmtune_radial)
+bestmodel_rad=svmtune_radial$best.model
+summary(bestmodel_rad)
+pred=predict(bestmodel_rad,w_trainset)
+table(pred,w_trainset$class)
+svmtrain_pred_err=mean(pred!=w_trainset$class)
+svmtrain_pred_acc=1-svmtrain_pred_err
+svmtrain_pred_acc *100
+svmtrain_pred_err*100
+pred_test=predict(bestmodel_rad,w_testset)
+table(pred_test,w_testset$class)
+svmtest_pred_testerr=mean(pred_test!=w_testset$class)
+svmtest_pred_testacc=1-svmtest_pred_testerr
+svmtest_pred_testacc*100
+svmtest_pred_testerr*100
+
+*******************************************************************************************************************
+POLYNOMIAL KERNEL
+
+svm.poly_1 = svm(class ~ ., data = w_trainset,gamma=1, kernel = "poly", degree = 2,cost=0.01)
+summary(svm.poly_1)
+tr_pred = predict(svm.poly_1, w_trainset)
+table(tr_pred,w_trainset$class)
+err=mean(tr_pred!=w_trainset$class)  
+acc=1-err
+acc*100
+err*100
+ts_pred = predict(svm.poly_1,w_testset)
+table(ts_pred,w_testset$class)
+err_test=mean(ts_pred!=w_testset$class)   
+acc_test=1-err_test
+acc_test*100
+err_test*100
+
+*************************************************************************************************************************
+POLYNOMIAL BEST MODEL
+
+svmtune_polynomial=tune(svm,class~.,data=w_trainset,kernel="poly",gamma=c(0.5,1,2,3,4),ranges=list(cost=c(0.1 ,1 ,10 ,100 ,1000)))
+summary(svmtune_polynomial)
+bestmodel_pol=svmtune_polynomial$best.model
+summary(bestmodel_pol)
+pred=predict(bestmodel_pol,w_trainset)
+table(pred,w_trainset$class)
+svmtrain_pred_err=mean(pred!=w_trainset$class)
+svmtrain_pred_acc=1-svmtrain_pred_err
+svmtrain_pred_acc *100
+svmtrain_pred_err*100
+pred_test=predict(bestmodel_rad,w_testset)
+table(pred_test,w_testset$class)
+svmtest_pred_testerr=mean(pred_test!=w_testset$class)
+svmtest_pred_testacc=1-svmtest_pred_testerr
+svmtest_pred_testacc*100
+svmtest_pred_testerr*100
